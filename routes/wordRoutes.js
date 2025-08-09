@@ -6,6 +6,7 @@ import {
   iniciarLicao,
   checarResposta,
   deletePalavra,
+  getPalavraDetalhes, // Importa a nova função
 } from '../controllers/wordController.js';
 
 const router = express.Router();
@@ -21,6 +22,9 @@ router.get('/lesson/start', iniciarLicao);
 
 // Rota para checar a resposta de um desafio
 router.post('/lesson/check', checarResposta);
+
+// Rota para pegar os detalhes de uma palavra específica
+router.get('/:id/details', getPalavraDetalhes);
 
 //Deletar palavra
 router.delete('/:id', deletePalavra);
