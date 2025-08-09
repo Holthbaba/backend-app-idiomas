@@ -88,20 +88,43 @@ export const adicionarPalavra = async (req, res) => {
 
 export const iniciarLicao = async (req, res) => {
   try {
-    const [frases] = await pool.query(`
-      SELECT f.id, f.palavra_id, f.frase_texto
-      FROM frases f
-      JOIN palavras p ON f.palavra_id = p.id
-      WHERE p.status = 'aprendendo'
-      ORDER BY RAND()
-      LIMIT 1
-    `);
+    let query;
+    // 25% de chance de pegar uma palavra para revisão
+    const isRevisao = Math.random() < 0.25;
+
+    const [palavrasAprendidas] = await pool.query("SELECT COUNT(*) as count FROM palavras WHERE status = 'aprendida'");
+    const countAprendidas = palavrasAprendidas[0].count;
+
+    // Se for para ser revisão E existirem palavras aprendidas, seleciona uma delas.
+    if (isRevisao && countAprendidas > 0) {
+      query = `
+        SELECT f.id, f.palavra_id, f.frase_texto, p.status
+        FROM frases f
+        JOIN palavras p ON f.palavra_id = p.id
+        WHERE p.status = 'aprendida'
+        ORDER BY RAND()
+        LIMIT 1
+      `;
+    } else {
+      // Caso contrário, pega uma palavra que o usuário ainda está aprendendo.
+      query = `
+        SELECT f.id, f.palavra_id, f.frase_texto, p.status
+        FROM frases f
+        JOIN palavras p ON f.palavra_id = p.id
+        WHERE p.status = 'aprendendo'
+        ORDER BY RAND()
+        LIMIT 1
+      `;
+    }
+
+    const [frases] = await pool.query(query);
 
     if (frases.length === 0) {
+      // Mensagem genérica caso não haja nem palavras aprendidas nem em aprendizado.
       return res.status(404).json({ message: 'Parabéns! Nenhuma frase nova para aprender.' });
     }
 
-    res.status(200).json(frases[0]);
+    res.status(200).json(frases[0]); // Retorna { id, palavra_id, frase_texto, status }
 
   } catch (error) {
     res.status(500).json({ message: 'Erro ao iniciar lição.', error: error.message });
