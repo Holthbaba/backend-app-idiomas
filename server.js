@@ -1,7 +1,9 @@
+// server.js
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import wordRoutes from './routes/wordRoutes.js';
+import listeningRoutes from './routes/listeningRoutes.js'; // Importe as novas rotas
 
 // Carrega as variáveis de ambiente do arquivo .env
 dotenv.config();
@@ -10,13 +12,14 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
-app.use(cors()); // Permite requisições de outras origens (seu frontend)
-app.use(express.json()); // Permite que o servidor entenda JSON no corpo das requisições
+app.use(cors());
+app.use(express.json());
 
-// Rota principal da API
+// Rotas da API
 app.use('/api/words', wordRoutes);
+app.use('/api/listening', listeningRoutes); // Use as novas rotas
 
-// Rota de "saúde" para verificar se o servidor está no ar
+// Rota de "saúde"
 app.get('/', (req, res) => {
   res.send('API do App de Idiomas está funcionando!');
 });
